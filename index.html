@@ -317,7 +317,8 @@
 
   function envoiSheet(nom, reponse){
     const url = SCRIPT_URL + "?prenom=" + encodeURIComponent(nom) + "&reponse=" + encodeURIComponent(reponse);
-    fetch(url, { method:"GET", mode:"no-cors" }).catch(()=>{});
+    const img = new Image();
+    img.src = url;
   }
   function majCompteurs(){
     document.getElementById("n-oui").textContent=compteurs["Je viens"];
