@@ -302,6 +302,7 @@
       prenom.disabled=true; dejaRepondu=true;
     }
     envoiSheet(nom, reponse);
+    setTimeout(chargerTotaux, 2500);
     if(reponse==="Je viens"){
       after.classList.add("show");
       setTimeout(()=> after.scrollIntoView({ behavior:"smooth", block:"center" }), 300);
@@ -362,6 +363,35 @@
       `<div class="bloc-temps sec"><div class="num">${s}</div><div class="lbl">sec</div></div>`;
   }
   majCompte(); setInterval(majCompte,1000);
+
+  // Charge les vrais totaux depuis le Sheet (compteur partagé)
+  function chargerTotaux(){
+    const url = SCRIPT_URL + "?action=compter&t=" + Date.now();
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if(!data) return;
+        document.getElementById("n-oui").textContent = data.oui || 0;
+        document.getElementById("n-peut").textContent = data.peut || 0;
+        document.getElementById("n-non").textContent = data.non || 0;
+        compteurs["Je viens"] = data.oui || 0;
+        compteurs["Peut-être"] = data.peut || 0;
+        compteurs["Pas dispo"] = data.non || 0;
+        // Affiche les prénoms de ceux qui viennent
+        if(data.noms && data.noms.length > 0){
+          const v = chips.querySelector(".vide"); if(v) v.remove();
+          chips.innerHTML = "";
+          data.noms.forEach(n => {
+            const c = document.createElement("div");
+            c.className = "chip"; c.textContent = n;
+            chips.appendChild(c);
+          });
+        }
+      })
+      .catch(()=>{});
+  }
+  chargerTotaux();
+  setInterval(chargerTotaux, 15000);
 </script>
 </body>
 </html>
