@@ -364,31 +364,32 @@
   }
   majCompte(); setInterval(majCompte,1000);
 
-  // Charge les vrais totaux depuis le Sheet (compteur partagé)
+  // Charge les vrais totaux depuis le Sheet (compteur partagé, via JSONP pour contourner CORS)
+  function callbackTotaux(data){
+    if(!data) return;
+    document.getElementById("n-oui").textContent = data.oui || 0;
+    document.getElementById("n-peut").textContent = data.peut || 0;
+    document.getElementById("n-non").textContent = data.non || 0;
+    compteurs["Je viens"] = data.oui || 0;
+    compteurs["Peut-être"] = data.peut || 0;
+    compteurs["Pas dispo"] = data.non || 0;
+    if(data.noms && data.noms.length > 0){
+      const v = chips.querySelector(".vide"); if(v) v.remove();
+      chips.innerHTML = "";
+      data.noms.forEach(n => {
+        const c = document.createElement("div");
+        c.className = "chip"; c.textContent = n;
+        chips.appendChild(c);
+      });
+    }
+  }
   function chargerTotaux(){
-    const url = SCRIPT_URL + "?action=compter&t=" + Date.now();
-    fetch(url)
-      .then(r => r.json())
-      .then(data => {
-        if(!data) return;
-        document.getElementById("n-oui").textContent = data.oui || 0;
-        document.getElementById("n-peut").textContent = data.peut || 0;
-        document.getElementById("n-non").textContent = data.non || 0;
-        compteurs["Je viens"] = data.oui || 0;
-        compteurs["Peut-être"] = data.peut || 0;
-        compteurs["Pas dispo"] = data.non || 0;
-        // Affiche les prénoms de ceux qui viennent
-        if(data.noms && data.noms.length > 0){
-          const v = chips.querySelector(".vide"); if(v) v.remove();
-          chips.innerHTML = "";
-          data.noms.forEach(n => {
-            const c = document.createElement("div");
-            c.className = "chip"; c.textContent = n;
-            chips.appendChild(c);
-          });
-        }
-      })
-      .catch(()=>{});
+    const ancien = document.getElementById("jsonp-totaux");
+    if(ancien) ancien.remove();
+    const s = document.createElement("script");
+    s.id = "jsonp-totaux";
+    s.src = SCRIPT_URL + "?action=compter&t=" + Date.now();
+    document.body.appendChild(s);
   }
   chargerTotaux();
   setInterval(chargerTotaux, 15000);
